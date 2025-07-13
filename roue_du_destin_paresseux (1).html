@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Roue du destin paresseux</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding-top: 40px;
+      background-color: #fffbe6;
+    }
+    canvas {
+      margin: auto;
+      display: block;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 1.2em;
+      background-color: #f4c430;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    #result {
+      margin-top: 30px;
+      font-size: 1.5em;
+      color: #333;
+    }
+    #pointer {
+      position: absolute;
+      top: 120px;
+      left: 50%;
+      margin-left: -10px;
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 20px solid red;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎡 La roue du destin paresseux</h1>
+  <div id="pointer"></div>
+  <canvas id="wheel" width="400" height="400"></canvas>
+  <button onclick="spinWheel()">🎯 Lancer la roue</button>
+  <div id="result"></div>
+
+  <script>
+    const options = [
+      "Faire la sieste",
+      "Manger une glace",
+      "Lire 3 pages (puis dormir)",
+      "Ne rien faire",
+      "Encore rien",
+      "Regarder les nuages",
+      "Repenser à rien",
+      "Bouger un orteil (et regretter)",
+      "Se retourner côté ombre",
+      "Écrire une ligne (et l'effacer)"
+    ];
+
+    const canvas = document.getElementById("wheel");
+    const ctx = canvas.getContext("2d");
+    const center = canvas.width / 2;
+    const radius = center - 10;
+    let currentAngle = 0;
+    const sliceAngle = 2 * Math.PI / options.length;
+
+    function drawWheel() {
+      for (let i = 0; i < options.length; i++) {
+        const angle = i * sliceAngle;
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.arc(center, center, radius, angle, angle + sliceAngle);
+        ctx.fillStyle = `hsl(${i * 36}, 80%, 70%)`;
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(center, center);
+        ctx.rotate(angle + sliceAngle / 2);
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#333";
+        ctx.font = "14px sans-serif";
+        ctx.fillText(options[i], radius - 10, 5);
+        ctx.restore();
+      }
+    }
+
+    drawWheel();
+
+    function spinWheel() {
+      const spins = 6 + Math.random() * 4;
+      const totalRotation = spins * 2 * Math.PI;
+      const finalAngle = totalRotation % (2 * Math.PI);
+      currentAngle += totalRotation;
+
+      const duration = 4000;
+      const start = performance.now();
+
+      function animate(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const angle = currentAngle - easeOut * totalRotation;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(center, center);
+        ctx.rotate(angle);
+        ctx.translate(-center, -center);
+        drawWheel();
+        ctx.restore();
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          const selected = Math.floor(options.length - ((angle % (2 * Math.PI)) / sliceAngle)) % options.length;
+          document.getElementById("result").innerText = "🌞 Aujourd’hui : " + options[selected];
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+  </script>
+</body>
+</html>
